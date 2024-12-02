@@ -1,49 +1,39 @@
+import { db } from "../config/firebaseConfig.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.3.1/firebase-firestore.js";
+
 document.addEventListener("DOMContentLoaded", () => {
     const productGrid = document.querySelector(".product-grid");
     const filterButtons = document.querySelectorAll(".filter-btn");
 
-    const fetchProducts = () => {
-        return fetch('https://agustin-b41f3-default-rtdb.firebaseio.com/products.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data && typeof data === "object" && !Array.isArray(data)) {
-                    data = Object.values(data);
-                }
-    
-                if (!Array.isArray(data) || data.length === 0) {
-                    throw new Error('No products found or data is not in the expected format.');
-                }
-
-                data.forEach((product, index) => {
-                    if (!product.name || !product.sellPrice || !product.actualPrice || !product.images || !product.tags) {
-                        console.warn(`Producto en índice ${index} no tiene los campos esperados:`, product);
-                    }
-                });
-    
-                console.log('Fetched products:', data);
-                return data;
-            })
-            .catch(error => {
-                console.error('Error fetching products:', error);
-                return []; 
-            });
+    const fetchProducts = async () => {
+        try {
+            const querySnapshot = await getDocs(collection(db, "products"));
+            const products = querySnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }));
+            console.log("Fetched products:", products);
+            return products;
+        } catch (error) {
+            console.error("Error fetching products:", error);
+            return [];
+        }
     };
 
     const renderProducts = (products) => {
-        console.log('Number of products rendered:', products.length);
-        const productGrid = document.querySelector('.product-grid');
-        productGrid.innerHTML = '';
+        console.log("Number of products rendered:", products.length);
+        productGrid.innerHTML = "";
+
+        if (products.length === 0) {
+            productGrid.innerHTML = '<p>No products found.</p>';
+            return;
+        }
 
         products.forEach(product => {
             const productHTML = `
                 <a href="../pages/product.html?id=${product.id}" class="product-card">
                     <div class="product-image">
-                        <img src="${product.images && product.images[0] ? product.images[0] : 'default-image-path.png'}" class="product-thumb" alt="Product Image">
+                        <img src="${product.images && product.images[0] ? product.images[0] : 'default-image-path.png'}" class="product-thumb" alt="${product.name || 'Product Image'}">
                         <button class="card-btn" onclick="addToCart('${product.id}')">Add to Cart</button>
                     </div>
                     <div class="product-info">
@@ -64,17 +54,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     filterButtons.forEach(button => {
-        button.addEventListener("click", () => {
+        button.addEventListener("click", async () => {
             const category = button.getAttribute("data-category");
-
-            fetchProducts().then(products => {
-                const filteredProducts = filterProductsByCategory(products, category);
-                renderProducts(filteredProducts);
-            });
+            const products = await fetchProducts();
+            const filteredProducts = filterProductsByCategory(products, category);
+            renderProducts(filteredProducts);
         });
     });
 
-    fetchProducts().then(products => {
+    (async () => {
+        const products = await fetchProducts();
         renderProducts(products);
-    });
+    })();
 });
