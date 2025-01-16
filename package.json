@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
   "build": "vite build",
-  "deploy": "npm run build && xcopy dist\\* . /E /I /Y && rmdir /s /q dist && git add . && git commit -m 'Deploy' && git push"
+  "deploy": "npm run build && xcopy dist\\* . /E /I /Y /EXCLUDE:.git && rmdir /s /q dist && git add index.html assets/ && git commit -m \"Implementación de la nueva versión del build\" && git push"
 },
 
   "keywords": [],
