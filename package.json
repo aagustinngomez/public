@@ -5,10 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-  "build": "vite build",
-  "deploy": "npm run build && xcopy dist\\* . /E /I /Y /EXCLUDE:.git && rmdir /s /q dist && git add index.html assets/ && git commit -m \"Implementación de la nueva versión del build\" && git push"
-},
-
+    "build": "vite build",
+    "deploy": "gh-pages -d dist"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
